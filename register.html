@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="/scripts/auth.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/login_register_style.css">
+</head>
+
+<body>
+    <div class="auth_container">
+
+        <div class="block">
+            <img class="logo" src="/embedded_images/logo.svg">
+            <h2>Поліклініка Х</h3>
+                <h3>Створення вашого аккаунту</h3>
+
+                <form class="register_form" novalidate action="" method="post">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="user_name" placeholder="Ваше прізвище та ім'я"
+                            value="" name="name" required pattern="[А-ЯЇІа-яії]+\s[А-ЯЇІа-яії]+">
+                        <div class="invalid-feedback">Введіть ім'я та прізвище через пробіл.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="tel" class="form-control" id="user_phone_number" placeholder="Ваш номер телефону"
+                            value="" name="name" required pattern="0{1}\d{9}">
+                        <div class="invalid-feedback">Номер телефону має бути введений у форматі 0xxxxxxxxx.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control register_login" id="login"
+                            placeholder="Введіть ваш логін" value="" name="name" required pattern="[a-zA-Z0-9]+">
+                        <div class="invalid-feedback">Логін введений невірно або вже існує.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="pass" placeholder="Введіть пароль" value=""
+                            name="name" required pattern="[a-zA-Z0-9]+">
+                        <div class="invalid-feedback">Пароль введений невірно або не співпадає.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="pass_repeat" placeholder="Повторіть пароль"
+                            value="" name="name" required pattern="[a-zA-Z0-9]+">
+                        <div class="invalid-feedback">Пароль введений невірно або не співпадає.</div>
+                    </div>
+
+                    <button type="submit" id="registerBtn"
+                        class="btn btn-primary submit_button">Зареєструватися</button>
+                </form>
+
+                <h6>Маєте аккаунт? <a href="/login.html">Увійти</a></h6>
+        </div>
+
+        <div class="info">
+            <h3>Ваша поліклініка поруч</h3>
+            <p><b>"Поліклініка Х"</b> надає великий переліг послуг, які є необхідними для кожної людини. За допомогою
+                створення вашого аккаунту ви будете мати доступ ставати в чергу онлайн та отримувати своєчасну
+                інформацію.</p>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        load();
+        document.getElementById("user_phone_number").mask('0000-0000')
+    })
+
+    const form = document.getElementsByClassName('register_form')[0];
+
+    const userNameInput = document.getElementById('user_name')
+    const userPhoneInput = document.getElementById('user_phone_number')
+
+    const loginInput = document.getElementById("login")
+    const passwordInput = document.getElementById("pass")
+    const passwordSecondInput = document.getElementById("pass_repeat")
+
+    const registerButton = document.getElementById('registerBtn')
+
+    function tryToRegister() {
+        checkLoginExists(loginInput.value, function (exists) {
+            if (exists) {
+                loginInput.classList.add('is-invalid')
+                registerButton.textContent = 'Зареєструватися'
+            } else {
+                loginInput.classList.remove('is-invalid')
+
+                register(
+                    userNameInput.value,
+                    userPhoneInput.value,
+                    loginInput.value,
+                    passwordInput.value,
+                    onRegisterResult
+                )
+            }
+        })
+    }
+
+    function onRegisterResult(registered) {
+        if (registered)
+            authUser(loginInput.value, passwordInput.value, onLoginResult)
+        else
+            onFail()
+    }
+
+    function onLoginResult(userId) {
+        if (userId === 0) {
+            onFail()
+        } else {
+            window.open('/cabinet.html')
+        }
+    }
+
+    function onFail() {
+        registerButton.textContent = 'Зареєструватися'
+        form.classList.remove('was-validated');
+        registerButton.classList.add('is-invalid');
+        passwordInput.classList.add('is-invalid');
+    }
+
+    function arePasswordsEquals() {
+        return passwordInput.value === passwordSecondInput.value
+    }
+
+    window.addEventListener('load', function () {
+        form.addEventListener('submit', function (event) {
+            if (form.checkValidity()) {
+                if (arePasswordsEquals()) {
+                    tryToRegister();
+                    registerButton.textContent = 'Реєстрація...'
+
+                    form.classList.remove('was-validated');
+                    registerButton.classList.remove('is-invalid');
+                    passwordInput.classList.remove('is-invalid');
+                    passwordSecondInput.classList.remove('is-invalid')
+                } else {
+                    form.classList.remove('was-validated');
+                    passwordInput.classList.add('is-invalid');
+                    passwordSecondInput.classList.add('is-invalid')
+                }
+            } else {
+                form.classList.add('was-validated');
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+        }, false);
+    }, false);
+</script>

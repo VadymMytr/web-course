@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="/scripts/auth.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/login_register_style.css">
+</head>
+
+<body>
+    <div class="auth_container">
+
+        <div class="block">
+            <img class="logo" src="/embedded_images/logo.svg">
+            <h2>Поліклініка Х</h3>
+                <h3>Вхід у ваш аккаунт</h3>
+
+                <form class="login_form" novalidate action="" method="post">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="login" placeholder="Введіть ваш логін" value=""
+                            name="name" required pattern="[a-zA-Z0-9]+">
+                        <div class="invalid-feedback">Логін невірний.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="pass" placeholder="Введіть пароль" value=""
+                            name="name" required pattern="[a-zA-Z0-9]+">
+                        <div class="invalid-feedback">Пароль невірний.</div>
+                    </div>
+
+                    <button type="submit" id="loginBtn" class="btn btn-primary submit_button">Увійти</button>
+                </form>
+
+                <h6>Немає аккаунту? <a href="register.html">Створити аккаунт</a></h6>
+        </div>
+
+        <div class="info">
+            <h3>Увійдіть у свою робочу область</h3>
+            <p>Введіть свій логін і пароль, щоб отримати доступ до усього функціоналу сайту поліклініки. Ви зможете
+                здійснювати записи та переглядати детальну інформацію.</p>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    const form = document.getElementsByClassName('login_form')[0];
+
+    const loginInput = document.getElementById("login")
+    const passwordInput = document.getElementById("pass")
+    const loginButton = document.getElementById('loginBtn')
+
+    function tryToLogin() {
+        authUser(
+            loginInput.value,
+            passwordInput.value,
+            onLoginResult
+        )
+    }
+
+    function onLoginResult(userId) {
+        if (userId === 0) {
+            loginButton.textContent = 'Увійти'
+            form.classList.remove('was-validated');
+            loginButton.classList.add('is-invalid');
+            passwordInput.classList.add('is-invalid');
+        } else {
+            window.open('/cabinet.html')
+        }
+    }
+
+    window.addEventListener('load', function () {
+        form.addEventListener('submit', function (event) {
+            if (form.checkValidity()) {
+                tryToLogin();
+                loginButton.textContent = 'Вхід...'
+                form.classList.remove('was-validated');
+                loginButton.classList.remove('is-invalid');
+                passwordInput.classList.remove('is-invalid');
+            } else {
+                form.classList.add('was-validated');
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+        }, false);
+    }, false);
+</script>

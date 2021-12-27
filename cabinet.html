@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/load_header.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript"
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles/cabinet_style.css">
+</head>
+
+<body>
+
+    <div id="header"></div>
+
+    <div class="cabinet_user_container">
+
+        <div class="cabinet_user_info_container">
+
+            <div class="user_info_title_conatiner">
+                <h2 id="user_info_title" class="user_info_title">Вітаємо, гість!</h2>
+                <hr class="user_info_divider">
+            </div>
+
+            <form id="user_info_form" class="cabinet_form" novalidate action="" method="post">
+
+                <div class="form-group">
+                    <p>Ваше ім'я:</p>
+                    <input type="text" class="form-control" id="user_info_name" name="name" required
+                        pattern="[А-ЯЇІа-яії]+\s[А-ЯЇІа-яії]+">
+                    <div class="invalid-feedback">Дані невірні.</div>
+                </div>
+
+                <div class="form-group">
+                    <p>Ваш номер телефону:</p>
+                    <input type="tel" class="form-control" id="user_info_phone_number" name="phone" required
+                        pattern="0{1}\d{9}">
+                    <div class="invalid-feedback">Дані невірні.</div>
+                </div>
+
+                <button type="submit" id="updateBtn" class="btn btn-primary user_info_update_button">Оновити
+                    дані</button>
+            </form>
+
+            <button id="deleteAccountBtn" class="btn btn-primary user_info_delete_account_button"
+                onclick="changeModalVisibility(modalOfUserDelete, true)">Видалити аккаунт</button>
+
+        </div>
+
+        <div class="cabinet_calls_container">
+            <div class="calls_title_container">
+                <h3 id="calls_title" class="calls_title">Ваші виклики:</h3>
+                <hr class="user_info_divider">
+            </div>
+
+            <div id="calls_container" class="calls_container" style="display: none;"></div>
+            <div id="no_calls_container" class="no_calls_container">
+                <h5 id="no_calls">Наразі викликів немає.</h5>
+            </div>
+
+            <div class="calls_button_container">
+                <button id="createCallButton" class="btn btn-primary create_call_button"
+                    onclick="showCallForm()">Викликати лікаря</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="delete_user_modal" class="cabinet_modal_container" style="display: none;">
+        <div class="cabinet_modal">
+            <div class="modal_delete_user">
+                <h5>Ви точно хочете видалити аккаунт? Повернути його буде неможливо.</h5>
+                <div class="modal_delete_user_buttons">
+                    <button type="button" class="cancel_button"
+                        onclick="changeModalVisibility(modalOfUserDelete, false)">Відміна</button>
+                    <button type="button" class="yes_button" onclick="deleteCurrentUser()">Так</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="create_call_modal" class="cabinet_modal_container" style="display: none;">
+        <div class="cabinet_modal">
+            <div class="modal_create_call">
+                <h5>Створення виклику</h5>
+
+                <form id="call_form" class="cabinet_form" novalidate action="" method="post">
+                    <p>Оберіть лікаря:</p>
+                    <div class="input-group">
+                        <input readonly placeholder="Оберіть лікаря зі списку" class="form-control"
+                            id="call_doctor_name_input" name="name" required pattern="\W+">
+
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Лікарі</button>
+
+                            <ul class="dropdown-menu" id='call_create_doctor_dropdown' role="menu"
+                                aria-labelledby="dLabel">
+
+                            </ul>
+                        </div>
+
+                        <div class="invalid-feedback">Оберіть лікаря.</div>
+                    </div>
+
+                    <p>Опишіть Ваші скарги:</p>
+                    <div class="input-group">
+                        <textarea type="text" class="form-control" id="call_complaint"
+                            placeholder="Наприклад, болить живіт." value="" name="complaint" required="" pattern="\W+"
+                            rows="3"></textarea>
+                        <div class="invalid-feedback">Скарга не може бути пустою.</div>
+                    </div>
+
+                    <button type="submit" id="updateBtn"
+                        class="btn btn-primary user_info_update_button">Викликати</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer"></div>
+
+</body>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        load(loadUserDetails);
+    })
+
+    var startUserName = "";
+    var startUserPhone = "";
+
+    function loadUserDetails() {
+        getUserDetails(window.parent.getUserId(), onUserLoaded);
+        getAllDoctorsNames(onDoctorNamesLoaded);
+        refreshCalls();
+    }
+
+    function onUserLoaded(user) {
+        console.log(user)
+        const userData = JSON.parse(user);
+        if (userData === "") return;
+
+        startUserName = userData["user_name"];
+        startUserPhone = userData["user_phone_number"];
+
+        //set data
+        document.getElementById('user_info_title').textContent = "Вітаємо, " + startUserName + "!";
+        document.getElementById('user_info_name').value = startUserName;
+        document.getElementById('user_info_phone_number').value = startUserPhone;
+
+    }
+
+    //form scripts
+    const userForm = document.getElementById('user_info_form');
+    const userNameInput = document.getElementById('user_info_name');
+    const userPhoneInput = document.getElementById('user_info_phone_number');
+
+    const updateBtn = document.getElementById('updateBtn');
+    const deleteBtn = document.getElementById('deleteAccountBtn');
+
+
+    function updateUserData() {
+        updateUser(
+            window.parent.getUserId(),
+            userNameInput.value,
+            userPhoneInput.value,
+            onUserUpdated
+        );
+    }
+
+    function onUserUpdated(updated) {
+        if (JSON.parse(updated)) {
+            location.reload()
+        } else {
+            userForm.classList.remove('was-validated');
+            userNameInput.classList.add('is-invalid');
+            userPhoneInput.classList.add('is-invalid')
+        }
+    }
+
+    //modal scripts
+    const modalOfUserDelete = document.getElementById('delete_user_modal');
+    const modalOfCallCreate = document.getElementById('create_call_modal')
+
+    function changeModalVisibility(modal, visible) {
+        var displayType = 'flex'
+        if (!visible) displayType = 'none'
+
+        modal.style.display = displayType
+    }
+
+    window.onclick = function (event) {
+        switch (event.target) {
+            case modalOfUserDelete:
+                changeModalVisibility(modalOfUserDelete, false)
+                break;
+            case modalOfCallCreate:
+                changeModalVisibility(modalOfCallCreate, false)
+                break;
+        }
+    }
+
+    function deleteCurrentUser() {
+        changeModalVisibility(modalOfUserDelete, false)
+        deleteUser(window.parent.getUserId(), onUserDeleted)
+    }
+
+    function onUserDeleted(){
+        location.replace('/')
+    }
+
+    //calls
+    const callsContainer = document.getElementById('calls_container');
+    const noCallsContainer = document.getElementById('no_calls_container');
+
+    function refreshCalls() {
+        callsContainer.innerHTML = ""
+        getAllCalls(window.parent.getUserId(), onCallsReceived);
+    }
+
+    function onCallsReceived(calls) {
+        const callsArray = JSON.parse(calls);
+        if (callsArray.length === 0) {
+            showNoCalls();
+            return;
+        }
+
+        callsContainer.innerHTML = "";
+
+        callsArray.forEach(call => {
+            callsContainer.appendChild(createCallCard(call));
+        });
+
+        showCalls();
+    }
+
+    function createCallCard(call) {
+        const card = document.createElement('div');
+        card.classList.add('call_card');
+
+        const callTitle = document.createElement('h4')
+        callTitle.classList.add('call_title');
+        callTitle.textContent = "Виклик № " + call[0];
+
+        const callDoctor = document.createElement('h5')
+        callDoctor.classList.add('call_doctor');
+        callDoctor.textContent = "Лікар: " + call[3];
+
+        const callDocSpeciality = document.createElement('h5')
+        callDocSpeciality.classList.add('call_speciality');
+        callDocSpeciality.textContent = call[4];
+
+        const callComplaintTitle = document.createElement('h5')
+        callComplaintTitle.textContent = "Ваші скарги:";
+
+        const callComplaintContainer = document.createElement('div')
+        callComplaintContainer.classList.add('call_complaint_container')
+
+        const callComplaint = document.createElement('p')
+        callComplaint.textContent = call[1];
+
+        callComplaintContainer.appendChild(callComplaint);
+
+        const callButtonContainer = document.createElement('div')
+        callButtonContainer.classList.add('call_button_container')
+
+        const callDeleteButton = document.createElement('button')
+        callDeleteButton.classList.add('btn')
+        callDeleteButton.classList.add('btn-primary')
+        callDeleteButton.classList.add('call_delete_button')
+        callDeleteButton.textContent = "Відмініти виклик"
+        callDeleteButton.setAttribute('onclick', 'deleteUserCall(' + JSON.stringify(call) + ')')
+
+        callButtonContainer.appendChild(callDeleteButton)
+
+        card.appendChild(callTitle);
+        card.appendChild(callDoctor);
+        card.appendChild(callDocSpeciality);
+        card.appendChild(callComplaintTitle);
+        card.appendChild(callComplaintContainer);
+        card.appendChild(callButtonContainer);
+
+        return card;
+    }
+
+    function showCalls() {
+        callsContainer.style.display = "flex";
+        noCallsContainer.style.display = "none";
+    }
+
+    function showNoCalls() {
+        callsContainer.style.display = "none";
+        noCallsContainer.style.display = "flex";
+    }
+
+    function deleteUserCall(call) {
+        if (call.length === 0) return;
+
+        deleteCall(call[0], onCallDeleted)
+    }
+
+    function onCallDeleted(deleted) {
+        if (JSON.parse(deleted) === "true") {
+            refreshCalls();
+        }
+    }
+
+    var allDoctors = []
+    var selectedDoctorId = -1
+
+    const createCallForm = document.getElementById('call_form')
+    const dropDown = document.getElementById('call_create_doctor_dropdown')
+    const input = document.getElementById('call_doctor_name_input')
+    const complaint = document.getElementById('call_complaint')
+
+    function onDoctorNamesLoaded(doctors) {
+        allDoctors = doctors;
+        fillDoctorsInModal();
+    }
+
+    function showCallForm(){
+        selectedDoctorId = -1;
+        input.value = "";
+        complaint.value = "";
+
+        changeModalVisibility(modalOfCallCreate, true)
+    }
+
+    function fillDoctorsInModal() {
+        dropDown.innerHTML = "";
+        allDoctors.forEach(doctor => {
+            const li = document.createElement('li')
+            li.setAttribute('onclick', 'selectDoctor(' + JSON.stringify(doctor) + ')');
+            li.textContent = doctor[1];
+
+            dropDown.appendChild(li);
+        })
+    }
+
+    function selectDoctor(doctor) {
+        selectedDoctorId = doctor[0];
+        input.value = doctor[1];
+    }
+
+    function createUserCall() {
+        if (selectedDoctorId === -1) return;
+        createNewCall(
+            window.parent.getUserId(),
+            selectedDoctorId,
+            complaint.value,
+            onCallCreated
+        );
+    }
+
+    function onCallCreated(created){
+        changeModalVisibility(modalOfCallCreate, false);
+
+        if (JSON.parse(created) === "true") {
+            refreshCalls();
+        }
+    }
+
+    window.addEventListener('load', function () {
+        //user form
+        userForm.addEventListener('submit', function (event) {
+            if (userForm.checkValidity()) {
+                updateUserData();
+
+                userForm.classList.remove('was-validated');
+                userNameInput.classList.remove('is-invalid');
+                userPhoneInput.classList.remove('is-invalid');
+                updateBtn.classList.remove('is-invalid')
+            } else {
+                userForm.classList.remove('was-validated');
+                userNameInput.classList.add('is-invalid');
+                userPhoneInput.classList.add('is-invalid')
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+        }, false);
+
+        //create call form
+        createCallForm.addEventListener('submit', function (event) {
+            if (createCallForm.checkValidity()) {
+                createUserCall();
+
+                createCallForm.classList.remove('was-validated');
+                input.classList.remove('is-invalid');
+                complaint.classList.remove('is-invalid');
+            } else {
+                createCallForm.classList.remove('was-validated');
+                input.classList.add('is-invalid');
+                complaint.classList.add('is-invalid')
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+        }, false);
+
+    }, false);
+</script>

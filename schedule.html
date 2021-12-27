@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/load_header.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/schedule_style.css">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            getAllSchedules(fillSchedule);
+            load();
+        })
+
+        function fillSchedule(scheduleArray){
+            const scheduleTable = document.getElementById('schedule_table');
+
+            scheduleArray.forEach(schedule => {
+                const row = document.createElement('tr');
+
+                for(var i = 1; i < schedule.length; i++){
+                    const column = document.createElement('th');
+                    column.textContent = schedule[i];
+
+                    row.appendChild(column);
+                }
+
+                scheduleTable.appendChild(row);
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="header"></div>
+
+    <div class="header_info">
+        <h2>Наш розклад</h2>
+        <hr class="divider">
+        <h5>Субота та неділя, а також державні свята - вихідні дні. Дякуємо за розуміння!</h5>
+        <h5>Розклад роботи допоможе підібрати Вам час, в який зручно приходити до наших спеціалістів. Ми завжди чекаємо на Вас!</h5>
+    </div>
+
+    <table id="schedule_table">
+        <tr class="schedule_table_title">
+            <th>Лікар</th>
+            <th>Спеціальність</th>
+            <th>№ Кабінету</th>
+            <th>Пн</th>
+            <th>Вт</th>
+            <th>Ср</th>
+            <th>Чт</th>
+            <th>Пт</th>
+        </tr>
+    </table>
+
+    <div id="footer"></div>
+</body>

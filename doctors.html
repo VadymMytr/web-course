@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/load_header.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/doctors_style.css">
+</head>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        getAllDoctors(fillDoctorsList);
+        load();
+    })
+
+    function fillDoctorsList(doctors) {
+        const container = document.getElementById('doctors_container');
+
+        var currentColumn = 1;
+        var currentRow = createRow();
+
+        for (var i = 0; i < doctors.length; i++) {
+            const doctor = doctors[i];
+            currentRow.appendChild(createDoctorCard(doctor));
+            currentColumn++;
+
+            if (currentColumn > 3) {
+                container.appendChild(currentRow);
+                currentRow = createRow();
+                currentColumn = 1;
+            }else if(i === doctors.length - 1){
+                container.appendChild(currentRow);
+            }
+        }
+    }
+
+    function createRow() {
+        var row = document.createElement('div');
+        row.classList.add('doctors_row');
+        return row;
+    }
+
+    function createDoctorCard(doctorData) {
+        const card = document.createElement('div')
+        card.classList.add('doctor_card')
+        card.setAttribute('onclick', 'showDoctor(' + JSON.stringify(doctorData) + ')')
+
+        const image = document.createElement('img')
+        image.setAttribute('src', doctorData[4])
+
+        const nameContainer = document.createElement('div')
+        nameContainer.classList.add('doctor_name_container')
+
+        const name = document.createElement('h2')
+        name.textContent = doctorData[1]
+
+        const speciality = document.createElement('p')
+        speciality.textContent = doctorData[7]
+
+        nameContainer.appendChild(name)
+        nameContainer.appendChild(speciality)
+
+        card.appendChild(image);
+        card.appendChild(nameContainer);
+
+        return card;
+    }
+
+    function changeModalVisibility(visible) {
+        var displayType = 'flex'
+        if (!visible) displayType = 'none'
+
+        document.getElementById('doctor_info_modal_container').style.display = displayType
+    }
+
+    function showDoctor(doctorData) {
+        document.getElementById('doctor_info_modal_name').textContent = doctorData[1]
+        document.getElementById('doctor_info_modal_speciality').textContent = doctorData[7]
+        document.getElementById('doctor_info_modal_details').textContent = doctorData[3]
+
+        document.getElementById('doctor_info_modal_image').setAttribute('src', doctorData[4])
+
+        changeModalVisibility(true);
+    }
+
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('doctor_info_modal_container')) {
+            changeModalVisibility(false)
+        }
+    }
+</script>
+
+<body>
+    <div id="header"></div>
+
+    <div class="header_info">
+        <h2>Наші лікарі</h2>
+        <hr class="divider">
+        <h5>У закладі працюють 20 досвідчених працівників, які завжди раді прийти на допомогу. Серед них: лікарі
+            загальної
+            практики (сімейні лікарі),
+            терапевти, педіатри, педіатр-дільничі, а також лікар ортопед-травматолог. Усі вони отримали медичну освіту у
+            найкращих навчальних закладах
+            України та Європи. Крім того, постійні курси підвищення кваліфікації допомагають їм розвиватися щодня та
+            бути в
+            тренді сучасної медицини.
+        </h5>
+    </div>
+
+    <div id="doctors_container" class="doctors_container"></div>
+
+    <div id="doctor_info_modal_container" class="doctor_info_modal_container" style="display: none;">
+        <div id='doctor_info_modal' class="doctor_info_modal">
+            <div class="doctor_info_modal_header">
+                <img class="doctor_close_modal" src="/embedded_images/close.svg" width="30px" height="30px"
+                    onclick="changeModalVisibility(false)">
+            </div>
+            <h2 id='doctor_info_modal_name'></h2>
+            <h3 id='doctor_info_modal_speciality'>
+                </h2>
+                <div class="doctor_info_model_body">
+                    <img id='doctor_info_modal_image' class="doctor_image_modal">
+                    <p id='doctor_info_modal_details'></p>
+                </div>
+        </div>
+    </div>
+
+    <div id="footer"></div>
+</body>
